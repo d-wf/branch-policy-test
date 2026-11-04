@@ -1,0 +1,15 @@
+name: Test ARC Autoscaler
+on:
+  workflow_dispatch:
+
+jobs:
+  test-scaling:
+    runs-on: aks-autoscaler-fleet
+    strategy:
+      matrix:
+        runner: [1, 2, 3]
+    steps:
+      - name: Testar Execução no AKS
+        run: |
+          echo "Olá do runner auto-hospedado no AKS!"
+          sleep 30
