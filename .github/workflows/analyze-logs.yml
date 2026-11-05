@@ -14,7 +14,25 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
       - name: 'Stream to BigQuery'
         run: |
           echo "Analyzing failure patterns..."
-          # bq load command goes here
+          
+          # Monta o JSON com os metadados da falha
+          cat <<EOF > payload.json
+          {
+            "run_id": ${{ github.event.workflow_run.id }},
+            "repository": "${{ github.repository }}",
+            "workflow_name": "${{ github.event.workflow_run.name }}",
+            "status": "${{ github.event.workflow_run.status }}",
+            "conclusion": "${{ github.event.workflow_run.conclusion }}",
+            "timestamp": "$(date -u +'%Y-%m-%d %H:%M:%S')",
+            "log_content": "Workflow falhou na execução ${{ github.event.workflow_run.id }}"
+          }
+          EOF
+
+          # Insere os dados diretamente no BigQuery
+          bq load --source_format=NEWLINE_DELIMITED_JSON github_metrics.workflow_logs payload.json
